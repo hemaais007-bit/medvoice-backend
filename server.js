@@ -2,6 +2,7 @@ import express from "express";
 import multer from "multer";
 import cors from "cors";
 import Tesseract from "tesseract.js";
+import fetch from "node-fetch";
 
 const app = express();
 app.use(cors());
@@ -28,9 +29,29 @@ app.post("/scan", upload.single("image"), async (req, res) => {
     இரத்த சர்க்கரை ${value}. 
     இது ${result.status === "high" ? "அதிகம்" : "சாதாரணம்"}.`;
 
-    res.json({
-      results: [result],
-      speech
+    const audioResponse = await fetch(
+  "https://api.elevenlabs.io/v1/text-to-speech/mGboHvCVOXWYeFL8KTR0",
+  {
+    method: "POST",
+    headers: {
+      "xi-api-key": "sk_07c0cc43e188f47e95905b365aac8d7aa77b8c07c43d81fd",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      text: speech,
+      model_id: "eleven_multilingual_v2"
+    })
+  }
+);
+
+const audioBuffer = await audioResponse.arrayBuffer();
+const audioBase64 = Buffer.from(audioBuffer).toString("base64");
+
+res.json({
+  results: [result],
+  speech,
+  audio: audioBase64
+});
     });
 
   } catch (err) {
